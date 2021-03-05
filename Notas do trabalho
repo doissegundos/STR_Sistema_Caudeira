@@ -1,0 +1,14 @@
+-- No POWERSHELL, na pasta do projeto, deve ser exexutado o seguinte comando:
+java -jar .\aquecedor2008_1.jar 4545
+
+-- Para abrir o programa C no kali deve entrar no diretorio do projeto.
+cd /mnt/c/Users/STEFA/Desktop/github/STR_Sistema_Caudeira
+
+-- Encontrar qual ip da maquina utilizando o comando ipconfig no cmd do windows.
+
+--Compilar os codigos que serão utilizado
+gcc -o labAula22 labAula22.c sensorT.c sensorH.c socket.c tela.c -lpthread
+
+--Rodar o codigo principal da aplicação
+./labAula22.c 172.27.112.1 4545
+
