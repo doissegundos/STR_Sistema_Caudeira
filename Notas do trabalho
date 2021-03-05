@@ -1,4 +1,5 @@
 -- No POWERSHELL, na pasta do projeto, deve ser exexutado o seguinte comando:
+cd C:\Users\STEFA\Desktop\github\STR_Sistema_Caudeira
 java -jar .\aquecedor2008_1.jar 4545
 
 -- Para abrir o programa C no kali deve entrar no diretorio do projeto.
@@ -7,8 +8,13 @@ cd /mnt/c/Users/STEFA/Desktop/github/STR_Sistema_Caudeira
 -- Encontrar qual ip da maquina utilizando o comando ipconfig no cmd do windows.
 
 --Compilar os codigos que serão utilizado
-gcc -o labAula22 labAula22.c sensorT.c sensorH.c socket.c tela.c -lpthread
+gcc -o controlecaldeira controlecaldeira.c sensor.c socket.c tela.c -lpthread
 
 --Rodar o codigo principal da aplicação
-./labAula22.c 172.27.112.1 4545
+./controlecaldeira 172.27.80.1 4545
+
+-- O codigo "sensor.c" tem monitores para todos os 5 sensores. 
+Para cada sensor foram criadas 3 funções para acessar e alterar os monitores dos sensores. 
+Função put altera o valor do monitor do sensor.
+Função get acessa o valor do monitor do sensor.
 
