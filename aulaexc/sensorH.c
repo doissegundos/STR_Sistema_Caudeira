@@ -11,7 +11,7 @@ static double limite_atual = HUGE_VAL;
 
 /* Chamado pela thread que le o sensor e disponibiliza aqui o valor lido */
  void sensor_putH( double lido) {
-	 pthread_mutex_lock( &exclusao_mutua); 
+	 pthread_mutex_lock(&exclusao_mutua); 
 	 sensor_lido = lido; 
 	 if( sensor_lido >= limite_atual) 
 	 	pthread_cond_signal( &alarme); 
@@ -27,7 +27,7 @@ static double limite_atual = HUGE_VAL;
 	 return aux;
  }
 
-/* Thread fica bloqueada até o valor do sensor chegar em limite */ 
+/* Thread fica bloqueada atÃ© o valor do sensor chegar em limite */ 
 void sensor_alarmeH( double limite) {
 	pthread_mutex_lock( &exclusao_mutua); 
 	limite_atual = limite; 
