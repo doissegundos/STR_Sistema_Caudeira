@@ -9,6 +9,7 @@
 #include "tela.h"
 #include "bufsensor.h"
 #include "buf_tempo_resposta.h"
+#include "atuadores.h"
 
 #define NSEC_PER_SEC    (1000000000)
 
