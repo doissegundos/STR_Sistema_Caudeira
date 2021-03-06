@@ -8,6 +8,7 @@
 #include "sensor.h"
 #include "tela.h"
 #include "bufsensor.h"
+#include "buf_tempo_resposta.h"
 
 #define NSEC_PER_SEC    (1000000000)
 
@@ -32,6 +33,9 @@ void thread_mostra_status (void){
 		
 		no = sensor_getNo();
 		bufduplo_insereLeitura_sensores(no);
+		
+		bufduplo_insereLeitura_tempo_resposta(10);
+		bufduplo_insereLeitura_tempo_resposta(10);
 		
 		aloca_tela();
 		printf("\33[H\33[2J");		
@@ -179,18 +183,21 @@ int main( int argc, char *argv[]) {
     
 	pthread_t t1, t2, t3;	
 	pthread_t buffer_sensores;
-	
+	pthread_t buffer_tempo_resposta;
 	
     
     pthread_create(&t1, NULL, (void *) thread_mostra_status, NULL);
     pthread_create(&t2, NULL, (void *) thread_le_sensor, NULL);
     pthread_create(&t3, NULL, (void *) thread_alarme, NULL);
     pthread_create(&buffer_sensores, NULL, (void *) bufduplo_esperaBufferCheioSensores, NULL);
+    pthread_create(&buffer_tempo_resposta, NULL, (void *) bufduplo_esperaBufferCheio_tempo_resposta, NULL);
+	
     
 	pthread_join( t1, NULL);
 	pthread_join( t2, NULL);
 	pthread_join( t3, NULL);
 	pthread_join( buffer_sensores, NULL); 
+	pthread_join( buffer_tempo_resposta, NULL);
 	    
 }
 
