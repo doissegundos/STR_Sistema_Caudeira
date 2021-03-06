@@ -103,9 +103,7 @@ void controleTemperatura()
 		
     	
 		printf("Passou um periodo !\n");	
-		
-		
-		
+			
 		
 		
 		// Calcula inicio do proximo periodo
@@ -149,6 +147,40 @@ void controleNivelAgua()
 		
 		
 		
+		// Calcula inicio do proximo periodo
+		t.tv_nsec += periodo;
+		while (t.tv_nsec >= NSEC_PER_SEC) {
+			t.tv_nsec -= NSEC_PER_SEC;
+			t.tv_sec++;
+		}
+	}
+}
+
+void verificaTemperatura()
+{
+	struct timespec t;
+	long int periodo = 10000000; 	// 10ms
+	double temp;
+	
+	// Le a hora atual, coloca em t
+	clock_gettime(CLOCK_MONOTONIC ,&t);
+
+	// Tarefa periodica iniciará em 1 segundo
+	t.tv_sec++;
+
+	while(1) {
+		// Espera ateh inicio do proximo periodo
+		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t, NULL);
+		
+		
+    	// Realiza seu trabalho    	
+    	temp = sensor_getT();
+		if (temp>30){
+    		printf("ALARME DISPARADO");
+		}
+		    		
+			
+		
 		
 		// Calcula inicio do proximo periodo
 		t.tv_nsec += periodo;
@@ -184,6 +216,8 @@ int main( int argc, char *argv[]) {
 	pthread_t t1, t2, t3;	
 	pthread_t buffer_sensores;
 	pthread_t buffer_tempo_resposta;
+	pthread_t verifica_temperatura;
+	
 	
     
     pthread_create(&t1, NULL, (void *) thread_mostra_status, NULL);
@@ -191,6 +225,7 @@ int main( int argc, char *argv[]) {
     pthread_create(&t3, NULL, (void *) thread_alarme, NULL);
     pthread_create(&buffer_sensores, NULL, (void *) bufduplo_esperaBufferCheioSensores, NULL);
     pthread_create(&buffer_tempo_resposta, NULL, (void *) bufduplo_esperaBufferCheio_tempo_resposta, NULL);
+    pthread_create(&verifica_temperatura, NULL, (void *) verificaTemperatura, NULL);
 	
     
 	pthread_join( t1, NULL);
@@ -198,6 +233,7 @@ int main( int argc, char *argv[]) {
 	pthread_join( t3, NULL);
 	pthread_join( buffer_sensores, NULL); 
 	pthread_join( buffer_tempo_resposta, NULL);
+	pthread_join( verifica_temperatura, NULL);
 	    
 }
 
