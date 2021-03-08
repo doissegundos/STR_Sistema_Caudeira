@@ -18,7 +18,7 @@ int nivel_agua = 0;
 
 
 void thread_mostra_status (void){
-	double t, h, ti, ta, no;
+	double t, h, ti, ta, no,na,ni,nf,q;
 	while(1){
 		t = sensor_getT();
 		bufduplo_insereLeitura_sensores(t);
@@ -35,6 +35,11 @@ void thread_mostra_status (void){
 		no = sensor_getNo();
 		bufduplo_insereLeitura_sensores(no);
 		
+		na = atuador_getNa();
+		nf = atuador_getNf();
+		ni = atuador_getNi();
+		q = atuador_getQ();
+		
 		bufduplo_insereLeitura_tempo_resposta(10);
 		bufduplo_insereLeitura_tempo_resposta(10);
 		
@@ -46,6 +51,10 @@ void thread_mostra_status (void){
 		printf("Temperatura da agua de entrada (Ti)--> %.2lf\n", ti);
 		printf("Fluxo de agua de saisa (No)--> %.2lf\n", no);
 		printf("Altura (H)--> %.2lf\n", h);
+		printf("Fluxo de água aquecida (Na)--> %.2lf\n", na);
+		printf("Fluxo de água de saida (Nf)--> %.2lf\n", nf);
+		printf("Fluxo de água de entrada (Ni)--> %.2lf\n", ni);
+		printf("Fluxo de calor (Q)--> %.2lf\n", q);
 		printf("---------------------------------------\n");
 		libera_tela();
 		sleep(1);
@@ -72,6 +81,20 @@ void thread_le_sensor (void){
 	    
 	    strcpy( msg_enviada, "sta0");
 	    sensor_putTa(msg_socket(msg_enviada));	
+	    
+	    //strcpy( msg_enviada, "ani20.0");
+	    //atuador_putNi(msg_socket(msg_enviada));
+	    
+	    //strcpy( msg_enviada, "ana5.0");
+	    //atuador_putNa(msg_socket(msg_enviada));
+	    
+	    //strcpy( msg_enviada, "anf20.0");
+	    //atuador_putNf(msg_socket(msg_enviada));
+		
+		//strcpy( msg_enviada, "aq-20.0");
+	    //atuador_putQ(msg_socket(msg_enviada));
+			
+		//		
 		//		
 	}
 		
@@ -81,6 +104,7 @@ void controleTemperatura()
 	struct timespec t;
 	long int periodo = 50000000; 	// 50ms
 	double temp;
+	char msg_enviada[1000];
 	
 	// Le a hora atual, coloca em t
 	clock_gettime(CLOCK_MONOTONIC ,&t);
@@ -95,11 +119,49 @@ void controleTemperatura()
 		
     	// Realiza seu trabalho    	
     	temp = sensor_getT();
-    	if (temp<=temperatura_desejada){
-    		printf("temperatura menor do q a escolhida pelo usuario");
+    	if (temp<temperatura_desejada+0.5){ //aumentar temp
+    		printf("temperatura menor do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+    		strcpy( msg_enviada, "ana10.0");
+    		atuador_putNa(msg_socket(msg_enviada));
+    		
+    		strcpy( msg_enviada, "ani0.0");
+	    	atuador_putNi(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "aq-1000000.0");
+	    	atuador_putQ(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "anf0.0");
+	    	atuador_putNf(msg_socket(msg_enviada));
+    		
+    		
 		}
-		if (temp>temperatura_desejada){
-    		printf("temperatura maior do q a escolhida pelo usuario");
+		if (temp>temperatura_desejada+0.5){ //diminuir temp
+    		printf("temperatura maior do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+	    	strcpy( msg_enviada, "ana0.0");
+    		atuador_putNa(msg_socket(msg_enviada));
+    		
+    		strcpy( msg_enviada, "ani100.0");
+	    	atuador_putNi(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "aq-1000000.0");
+	    	atuador_putQ(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "anf100.0");
+	    	atuador_putNf(msg_socket(msg_enviada));
+		}
+		if (temp==temperatura_desejada+0.5){ //estabilizar o sistema
+    		printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+	    	strcpy( msg_enviada, "ana0.0");
+    		atuador_putNa(msg_socket(msg_enviada));
+    		
+    		strcpy( msg_enviada, "ani0.0");
+	    	atuador_putNi(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "aq-0.0");
+	    	atuador_putQ(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "anf0.0");
+	    	atuador_putNf(msg_socket(msg_enviada));
 		}
 		
     	
@@ -131,6 +193,7 @@ void controleNivelAgua()
 	while(1) {
 		// Espera ateh inicio do proximo periodo
 		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t, NULL);
+		
 		
 		
     	// Realiza seu trabalho    	
@@ -209,7 +272,7 @@ int main( int argc, char *argv[]) {
 	cria_socket(argv[1], atoi(argv[2]) );
 	
 	printf("Digite o valor desejado da temperatura:\n");
-	scanf("%d", &temperatura_desejada);
+	scanf("%f", &temperatura_desejada);
 	
 	printf("Digite o valor desejado do nivel maximo de agua:\n");
 	scanf("%f", &nivel_agua);
@@ -218,7 +281,7 @@ int main( int argc, char *argv[]) {
 	pthread_t buffer_sensores;
 	pthread_t buffer_tempo_resposta;
 	pthread_t verifica_temperatura;
-	
+	pthread_t controle_temperatura;
 	
     
     pthread_create(&t1, NULL, (void *) thread_mostra_status, NULL);
@@ -227,6 +290,7 @@ int main( int argc, char *argv[]) {
     pthread_create(&buffer_sensores, NULL, (void *) bufduplo_esperaBufferCheioSensores, NULL);
     pthread_create(&buffer_tempo_resposta, NULL, (void *) bufduplo_esperaBufferCheio_tempo_resposta, NULL);
     pthread_create(&verifica_temperatura, NULL, (void *) verificaTemperatura, NULL);
+    pthread_create(&controle_temperatura, NULL, (void *) controleTemperatura, NULL);
 	
     
 	pthread_join( t1, NULL);
@@ -235,6 +299,7 @@ int main( int argc, char *argv[]) {
 	pthread_join( buffer_sensores, NULL); 
 	pthread_join( buffer_tempo_resposta, NULL);
 	pthread_join( verifica_temperatura, NULL);
+	pthread_join( controle_temperatura, NULL);
 	    
 }
 
