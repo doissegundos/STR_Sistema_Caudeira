@@ -14,7 +14,7 @@
 #define NSEC_PER_SEC    (1000000000)
 
 float temperatura_desejada = 0;
-int nivel_agua = 0;
+float nivel_agua = 0;
 
 
 void thread_mostra_status (void){
@@ -119,7 +119,22 @@ void controleTemperatura()
 		
     	// Realiza seu trabalho    	
     	temp = sensor_getT();
-    	if (temp<temperatura_desejada+0.5){ //aumentar temp
+		if (((temp-temperatura_desejada)<0.03 && (temp-temperatura_desejada)>0 )  || ((temperatura_desejada - temp)<0.03 && (temperatura_desejada - temp)>0 ))	
+		{ //estabilizar o sistema
+    		printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+	    	strcpy( msg_enviada, "ana0.0");
+    		atuador_putNa(msg_socket(msg_enviada));
+    		
+    		strcpy( msg_enviada, "ani0.0");
+	    	atuador_putNi(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "aq-0.0");
+	    	atuador_putQ(msg_socket(msg_enviada));
+	    	
+	    	strcpy( msg_enviada, "anf0.0");
+	    	atuador_putNf(msg_socket(msg_enviada));
+		}
+    	else if (temp<temperatura_desejada+0.2){ //aumentar temp
     		printf("temperatura menor do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
     		strcpy( msg_enviada, "ana10.0");
     		atuador_putNa(msg_socket(msg_enviada));
@@ -135,7 +150,7 @@ void controleTemperatura()
     		
     		
 		}
-		if (temp>temperatura_desejada+0.5){ //diminuir temp
+		else if (temp>temperatura_desejada+0.2){ //diminuir temp
     		printf("temperatura maior do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
 	    	strcpy( msg_enviada, "ana0.0");
     		atuador_putNa(msg_socket(msg_enviada));
@@ -149,20 +164,7 @@ void controleTemperatura()
 	    	strcpy( msg_enviada, "anf100.0");
 	    	atuador_putNf(msg_socket(msg_enviada));
 		}
-		if (temp==temperatura_desejada+0.5){ //estabilizar o sistema
-    		printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
-	    	strcpy( msg_enviada, "ana0.0");
-    		atuador_putNa(msg_socket(msg_enviada));
-    		
-    		strcpy( msg_enviada, "ani0.0");
-	    	atuador_putNi(msg_socket(msg_enviada));
-	    	
-	    	strcpy( msg_enviada, "aq-0.0");
-	    	atuador_putQ(msg_socket(msg_enviada));
-	    	
-	    	strcpy( msg_enviada, "anf0.0");
-	    	atuador_putNf(msg_socket(msg_enviada));
-		}
+
 		
     	
 		printf("Passou um periodo !\n");	
@@ -183,6 +185,7 @@ void controleNivelAgua()
 	struct timespec t;
 	long int periodo = 70000000; 	// 50ms
 	double h;
+	char msg_enviada[1000];
 	
 	// Le a hora atual, coloca em t
 	clock_gettime(CLOCK_MONOTONIC ,&t);
@@ -198,11 +201,21 @@ void controleNivelAgua()
 		
     	// Realiza seu trabalho    	
     	h = sensor_getH();
-    	if (h<=nivel_agua){
+    	if (h<nivel_agua){
     		printf("nivel de agua menor do q a escolhida pelo usuario");
+    		strcpy( msg_enviada, "ani100.0");
+	    	atuador_putNi(msg_socket(msg_enviada));
+	    	strcpy( msg_enviada, "anf0.0");
+	    	atuador_putNf(msg_socket(msg_enviada));
+	    	strcpy( msg_enviada, "ana10.0");
+    		atuador_putNa(msg_socket(msg_enviada));
 		}
 		if (h>nivel_agua){
     		printf("nivel de agua maior do q a escolhida pelo usuario");
+    		strcpy( msg_enviada, "ani0.0");
+	    	atuador_putNi(msg_socket(msg_enviada));
+	    	strcpy( msg_enviada, "anf100.0");
+	    	atuador_putNf(msg_socket(msg_enviada));
 		}
 		
     	
@@ -282,8 +295,9 @@ int main( int argc, char *argv[]) {
 	pthread_t buffer_tempo_resposta;
 	pthread_t verifica_temperatura;
 	pthread_t controle_temperatura;
+	pthread_t controle_agua;
 	
-    
+
     pthread_create(&t1, NULL, (void *) thread_mostra_status, NULL);
     pthread_create(&t2, NULL, (void *) thread_le_sensor, NULL);
     pthread_create(&t3, NULL, (void *) thread_alarme, NULL);
@@ -291,6 +305,7 @@ int main( int argc, char *argv[]) {
     pthread_create(&buffer_tempo_resposta, NULL, (void *) bufduplo_esperaBufferCheio_tempo_resposta, NULL);
     pthread_create(&verifica_temperatura, NULL, (void *) verificaTemperatura, NULL);
     pthread_create(&controle_temperatura, NULL, (void *) controleTemperatura, NULL);
+    pthread_create(&controle_agua, NULL, (void *) controleNivelAgua, NULL);
 	
     
 	pthread_join( t1, NULL);
@@ -300,6 +315,7 @@ int main( int argc, char *argv[]) {
 	pthread_join( buffer_tempo_resposta, NULL);
 	pthread_join( verifica_temperatura, NULL);
 	pthread_join( controle_temperatura, NULL);
+	pthread_join( controle_agua, NULL);
 	    
 }
 
