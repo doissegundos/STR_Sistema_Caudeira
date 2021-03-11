@@ -21,7 +21,7 @@ float nivel_agua = 0;
 void thread_mostra_status (void){
 	double te, h, ti, ta, no,na,ni,nf,q,temperatura_desejada,nivel_agua;
 	struct timespec t;
-	long int periodo = 40000000; 	// 40ms
+	long int periodo = 40e6; 	// 40ms
 	double temp;
 	
 	// Le a hora atual, coloca em t
@@ -42,10 +42,8 @@ void thread_mostra_status (void){
 		bufduplo_insereLeitura_sensores(h);
 		
 		ti = sensor_getTi();
-		bufduplo_insereLeitura_sensores(ti);
 		
 		ta = sensor_getTa();
-		bufduplo_insereLeitura_sensores(ta);
 		
 		no = sensor_getNo();
 		bufduplo_insereLeitura_sensores(no);
@@ -55,8 +53,6 @@ void thread_mostra_status (void){
 		ni = atuador_getNi();
 		q = atuador_getQ();
 		
-		bufduplo_insereLeitura_tempo_resposta(10);
-		bufduplo_insereLeitura_tempo_resposta(10);
 		
 		temperatura_desejada = temperatura_getH();
 		nivel_agua = nivel_getH();
@@ -64,17 +60,17 @@ void thread_mostra_status (void){
 		aloca_tela();
 		printf("\33[H\33[2J");		
 		printf("---------------------------------------\n");
-		printf("Temperatura escolhida pelo usuario--> %.2lf\n", temperatura_desejada);
-		printf("Nivel de agua escolhido pelo usuario--> %.2lf\n", nivel_agua);
-		printf("Temperatura (T)--> %.2lf\n", te);
-		printf("Temperatura do ambiente ao redor do recipiente (Ta)--> %.2lf\n", ta);
-		printf("Temperatura da agua de entrada (Ti)--> %.2lf\n", ti);
-		printf("Fluxo de agua de saisa (No)--> %.2lf\n", no);
-		printf("Altura (H)--> %.2lf\n", h);
-		printf("Fluxo de água aquecida (Na)--> %.2lf\n", na);
-		printf("Fluxo de água de saida (Nf)--> %.2lf\n", nf);
-		printf("Fluxo de água de entrada (Ni)--> %.2lf\n", ni);
-		printf("Fluxo de calor (Q)--> %.2lf\n", q);
+		printf("Temperatura escolhida pelo usuario--> %.4lf\n", temperatura_desejada);
+		printf("Nivel de agua escolhido pelo usuario--> %.4lf\n", nivel_agua);
+		printf("Temperatura (T)--> %.4lf\n", te);
+		printf("Temperatura do ambiente ao redor do recipiente (Ta)--> %.4lf\n", ta);
+		printf("Temperatura da agua de entrada (Ti)--> %.4lf\n", ti);
+		printf("Fluxo de agua de saisa (No)--> %.4lf\n", no);
+		printf("Altura (H)--> %.4lf\n", h);
+		printf("Fluxo de água aquecida (Na)--> %.4lf\n", na);
+		printf("Fluxo de água de saida (Nf)--> %.4lf\n", nf);
+		printf("Fluxo de água de entrada (Ni)--> %.4lf\n", ni);
+		printf("Fluxo de calor (Q)--> %.4lf\n", q);
 		printf("---------------------------------------\n");
 		libera_tela();
 		sleep(1);
@@ -95,7 +91,7 @@ void thread_le_sensor (void){
 	char msg_enviada[1000];
 	
 	struct timespec t;
-	long int periodo = 30000000; 	// 30ms
+	long int periodo = 30e6; 	// 30ms
 	double temp;
 	
 	// Le a hora atual, coloca em t
@@ -137,13 +133,14 @@ void thread_le_sensor (void){
 }
 void controleTemperatura()
 {
-	struct timespec t;
-	long int periodo = 50000000; 	// 50ms
+	struct timespec t, t_fim;;
+	long int periodo = 50e6; 	// 50ms
 	double temp;
 	char msg_enviada[1000];
 	double temperatura_desejada = 0;
 	// Le a hora atual, coloca em t
 	clock_gettime(CLOCK_MONOTONIC ,&t);
+	long atraso_fim;
 
 	// Tarefa periodica iniciará em 1 segundo
 	t.tv_sec++;
@@ -205,9 +202,12 @@ void controleTemperatura()
 
 		
     	
-		//printf("Passou um periodo !\n");	
+		// Le a hora atual, coloca em t_fim
+		clock_gettime(CLOCK_MONOTONIC ,&t_fim);	
 			
-		
+		// Calcula o tempo de resposta observado em microsegundos
+		atraso_fim = 1000000*(t_fim.tv_sec - t.tv_sec)   +   (t_fim.tv_nsec - t.tv_nsec)/1000;
+		bufduplo_insereLeitura_tempo_resposta(atraso_fim);
 		
 		// Calcula inicio do proximo periodo
 		t.tv_nsec += periodo;
@@ -220,11 +220,12 @@ void controleTemperatura()
 
 void controleNivelAgua()
 {
-	struct timespec t;
-	long int periodo = 70000000; 	// 70ms
+	struct timespec t, t_fim;;
+	long int periodo = 70e6; 	// 70ms
 	double h;
 	char msg_enviada[1000];
 	double nivel_agua = 0;
+	long atraso_fim;
 	
 	
 	// Le a hora atual, coloca em t
@@ -259,9 +260,12 @@ void controleNivelAgua()
 	    	atuador_putNf(msg_socket(msg_enviada));
 		}
 		
-    	
+		// Le a hora atual, coloca em t_fim
+		clock_gettime(CLOCK_MONOTONIC ,&t_fim);	
+		    	
 		//printf("Passou um periodo !\n");	
-		
+		atraso_fim = 1000000*(t_fim.tv_sec - t.tv_sec)   +   (t_fim.tv_nsec - t.tv_nsec)/1000;
+		bufduplo_insereLeitura_tempo_resposta(atraso_fim);
 		
 		
 		
@@ -277,7 +281,7 @@ void controleNivelAgua()
 void verificaTemperatura()
 {
 	struct timespec t;
-	long int periodo = 90000000; 	// 90ms
+	long int periodo = 90e6; 	// 90ms
 	double temp;
 	
 	

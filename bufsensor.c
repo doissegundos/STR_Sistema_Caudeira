@@ -45,11 +45,11 @@ void adiciona_dados_buffer_sensores(float valor_lido){
     
 	//	Considerando que 5 sensores terão valores armazenados no buffer
 	// então contaremos de 0 a 4 onde o arquivo terá 5 colunas e cada coluna terá valores referentes a um sensor
-    if(contador == 4){
+    if(contador == 2){
     	contador = 0;
 		fprintf(arquivo, "%f\n",valor_lido);		
 	}
-	if(contador>=0 && contador< 4){
+	if(contador>=0 && contador< 2){
 		contador++;
 		fprintf(arquivo, "%f\t",valor_lido);
 	}
