@@ -18,10 +18,24 @@ float nivel_agua = 0;
 
 
 void thread_mostra_status (void){
-	double t, h, ti, ta, no,na,ni,nf,q;
-	while(1){
-		t = sensor_getT();
-		bufduplo_insereLeitura_sensores(t);
+	double te, h, ti, ta, no,na,ni,nf,q;
+	struct timespec t;
+	long int periodo = 40000000; 	// 40ms
+	double temp;
+	
+	// Le a hora atual, coloca em t
+	clock_gettime(CLOCK_MONOTONIC ,&t);
+
+	// Tarefa periodica iniciará em 1 segundo
+	t.tv_sec++;
+
+	while(1) {
+		// Espera ateh inicio do proximo periodo
+		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t, NULL);
+		
+		
+    	te = sensor_getT();
+		bufduplo_insereLeitura_sensores(te);
 		
 		h = sensor_getH();
 		bufduplo_insereLeitura_sensores(h);
@@ -46,7 +60,7 @@ void thread_mostra_status (void){
 		aloca_tela();
 		printf("\33[H\33[2J");		
 		printf("---------------------------------------\n");
-		printf("Temperatura (T)--> %.2lf\n", t);
+		printf("Temperatura (T)--> %.2lf\n", te);
 		printf("Temperatura do ambiente ao redor do recipiente (Ta)--> %.2lf\n", ta);
 		printf("Temperatura da agua de entrada (Ti)--> %.2lf\n", ti);
 		printf("Fluxo de agua de saisa (No)--> %.2lf\n", no);
@@ -58,16 +72,38 @@ void thread_mostra_status (void){
 		printf("---------------------------------------\n");
 		libera_tela();
 		sleep(1);
-		//					
-	}	
 		
+		// Calcula inicio do proximo periodo
+		t.tv_nsec += periodo;
+		while (t.tv_nsec >= NSEC_PER_SEC) {
+			t.tv_nsec -= NSEC_PER_SEC;
+			t.tv_sec++;
+		}
+	}
+	
+	
 }
 
 
 void thread_le_sensor (void){
 	char msg_enviada[1000];
-	while(1){
-		strcpy( msg_enviada, "st-0");
+	
+	struct timespec t;
+	long int periodo = 30000000; 	// 30ms
+	double temp;
+	
+	// Le a hora atual, coloca em t
+	clock_gettime(CLOCK_MONOTONIC ,&t);
+
+	// Tarefa periodica iniciará em 1 segundo
+	t.tv_sec++;
+
+	while(1) {
+		// Espera ateh inicio do proximo periodo
+		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t, NULL);
+		
+		
+    	strcpy( msg_enviada, "st-0");
 		sensor_putT(msg_socket(msg_enviada));
 		
 		strcpy( msg_enviada, "sh-0");
@@ -82,22 +118,16 @@ void thread_le_sensor (void){
 	    strcpy( msg_enviada, "sta0");
 	    sensor_putTa(msg_socket(msg_enviada));	
 	    
-	    //strcpy( msg_enviada, "ani20.0");
-	    //atuador_putNi(msg_socket(msg_enviada));
-	    
-	    //strcpy( msg_enviada, "ana5.0");
-	    //atuador_putNa(msg_socket(msg_enviada));
-	    
-	    //strcpy( msg_enviada, "anf20.0");
-	    //atuador_putNf(msg_socket(msg_enviada));
+	   	
 		
-		//strcpy( msg_enviada, "aq-20.0");
-	    //atuador_putQ(msg_socket(msg_enviada));
-			
-		//		
-		//		
+		// Calcula inicio do proximo periodo
+		t.tv_nsec += periodo;
+		while (t.tv_nsec >= NSEC_PER_SEC) {
+			t.tv_nsec -= NSEC_PER_SEC;
+			t.tv_sec++;
+		}
 	}
-		
+			
 }
 void controleTemperatura()
 {
@@ -121,7 +151,7 @@ void controleTemperatura()
     	temp = sensor_getT();
 		if (((temp-temperatura_desejada)<0.03 && (temp-temperatura_desejada)>0 )  || ((temperatura_desejada - temp)<0.03 && (temperatura_desejada - temp)>0 ))	
 		{ //estabilizar o sistema
-    		printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+    		//printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
 	    	strcpy( msg_enviada, "ana0.0");
     		atuador_putNa(msg_socket(msg_enviada));
     		
@@ -135,7 +165,7 @@ void controleTemperatura()
 	    	atuador_putNf(msg_socket(msg_enviada));
 		}
     	else if (temp<temperatura_desejada+0.2){ //aumentar temp
-    		printf("temperatura menor do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+    		//printf("temperatura menor do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
     		strcpy( msg_enviada, "ana10.0");
     		atuador_putNa(msg_socket(msg_enviada));
     		
@@ -151,7 +181,7 @@ void controleTemperatura()
     		
 		}
 		else if (temp>temperatura_desejada+0.2){ //diminuir temp
-    		printf("temperatura maior do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+    		//printf("temperatura maior do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
 	    	strcpy( msg_enviada, "ana0.0");
     		atuador_putNa(msg_socket(msg_enviada));
     		
@@ -167,7 +197,7 @@ void controleTemperatura()
 
 		
     	
-		printf("Passou um periodo !\n");	
+		//printf("Passou um periodo !\n");	
 			
 		
 		
@@ -183,7 +213,7 @@ void controleTemperatura()
 void controleNivelAgua()
 {
 	struct timespec t;
-	long int periodo = 70000000; 	// 50ms
+	long int periodo = 70000000; 	// 70ms
 	double h;
 	char msg_enviada[1000];
 	
@@ -202,7 +232,7 @@ void controleNivelAgua()
     	// Realiza seu trabalho    	
     	h = sensor_getH();
     	if (h<nivel_agua){
-    		printf("nivel de agua menor do q a escolhida pelo usuario");
+    		//printf("nivel de agua menor do q a escolhida pelo usuario");
     		strcpy( msg_enviada, "ani100.0");
 	    	atuador_putNi(msg_socket(msg_enviada));
 	    	strcpy( msg_enviada, "anf0.0");
@@ -211,7 +241,7 @@ void controleNivelAgua()
     		atuador_putNa(msg_socket(msg_enviada));
 		}
 		if (h>nivel_agua){
-    		printf("nivel de agua maior do q a escolhida pelo usuario");
+    		//printf("nivel de agua maior do q a escolhida pelo usuario");
     		strcpy( msg_enviada, "ani0.0");
 	    	atuador_putNi(msg_socket(msg_enviada));
 	    	strcpy( msg_enviada, "anf100.0");
@@ -219,7 +249,7 @@ void controleNivelAgua()
 		}
 		
     	
-		printf("Passou um periodo !\n");	
+		//printf("Passou um periodo !\n");	
 		
 		
 		
@@ -236,7 +266,7 @@ void controleNivelAgua()
 void verificaTemperatura()
 {
 	struct timespec t;
-	long int periodo = 10000000; 	// 10ms
+	long int periodo = 90000000; 	// 90ms
 	double temp;
 	
 	// Le a hora atual, coloca em t
@@ -253,7 +283,7 @@ void verificaTemperatura()
     	// Realiza seu trabalho    	
     	temp = sensor_getT();
 		if (temp>30){
-    		printf("ALARME DISPARADO");
+    		printf("ALARME DISPARADO\n");
 		}
 		    		
 			
