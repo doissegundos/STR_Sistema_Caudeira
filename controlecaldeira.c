@@ -10,6 +10,7 @@
 #include "bufsensor.h"
 #include "buf_tempo_resposta.h"
 #include "atuadores.h"
+#include "monitorcontrole.h"
 
 #define NSEC_PER_SEC    (1000000000)
 
@@ -18,7 +19,7 @@ float nivel_agua = 0;
 
 
 void thread_mostra_status (void){
-	double te, h, ti, ta, no,na,ni,nf,q;
+	double te, h, ti, ta, no,na,ni,nf,q,temperatura_desejada,nivel_agua;
 	struct timespec t;
 	long int periodo = 40000000; 	// 40ms
 	double temp;
@@ -57,9 +58,14 @@ void thread_mostra_status (void){
 		bufduplo_insereLeitura_tempo_resposta(10);
 		bufduplo_insereLeitura_tempo_resposta(10);
 		
+		temperatura_desejada = temperatura_getH();
+		nivel_agua = nivel_getH();
+		
 		aloca_tela();
 		printf("\33[H\33[2J");		
 		printf("---------------------------------------\n");
+		printf("Temperatura escolhida pelo usuario--> %.2lf\n", temperatura_desejada);
+		printf("Nivel de agua escolhido pelo usuario--> %.2lf\n", nivel_agua);
 		printf("Temperatura (T)--> %.2lf\n", te);
 		printf("Temperatura do ambiente ao redor do recipiente (Ta)--> %.2lf\n", ta);
 		printf("Temperatura da agua de entrada (Ti)--> %.2lf\n", ti);
@@ -135,7 +141,7 @@ void controleTemperatura()
 	long int periodo = 50000000; 	// 50ms
 	double temp;
 	char msg_enviada[1000];
-	
+	double temperatura_desejada = 0;
 	// Le a hora atual, coloca em t
 	clock_gettime(CLOCK_MONOTONIC ,&t);
 
@@ -149,6 +155,8 @@ void controleTemperatura()
 		
     	// Realiza seu trabalho    	
     	temp = sensor_getT();
+    	temperatura_desejada = temperatura_getH();
+    	
 		if (((temp-temperatura_desejada)<0.03 && (temp-temperatura_desejada)>0 )  || ((temperatura_desejada - temp)<0.03 && (temperatura_desejada - temp)>0 ))	
 		{ //estabilizar o sistema
     		//printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
@@ -216,6 +224,8 @@ void controleNivelAgua()
 	long int periodo = 70000000; 	// 70ms
 	double h;
 	char msg_enviada[1000];
+	double nivel_agua = 0;
+	
 	
 	// Le a hora atual, coloca em t
 	clock_gettime(CLOCK_MONOTONIC ,&t);
@@ -231,6 +241,7 @@ void controleNivelAgua()
 		
     	// Realiza seu trabalho    	
     	h = sensor_getH();
+    	nivel_agua = nivel_getH();
     	if (h<nivel_agua){
     		//printf("nivel de agua menor do q a escolhida pelo usuario");
     		strcpy( msg_enviada, "ani100.0");
@@ -268,6 +279,7 @@ void verificaTemperatura()
 	struct timespec t;
 	long int periodo = 90000000; 	// 90ms
 	double temp;
+	
 	
 	// Le a hora atual, coloca em t
 	clock_gettime(CLOCK_MONOTONIC ,&t);
@@ -316,9 +328,11 @@ int main( int argc, char *argv[]) {
 	
 	printf("Digite o valor desejado da temperatura:\n");
 	scanf("%f", &temperatura_desejada);
+	temperatura_putH(temperatura_desejada);
 	
 	printf("Digite o valor desejado do nivel maximo de agua:\n");
 	scanf("%f", &nivel_agua);
+	nivel_putH(nivel_agua);
     
 	pthread_t t1, t2, t3;	
 	pthread_t buffer_sensores;

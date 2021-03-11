@@ -1,5 +1,5 @@
-//#ifndef ATUADORES_H
-//#define ATUADORES_H
+#ifndef ATUADORES_H
+#define ATUADORES_H
 
 void atuador_putNi(double lido);
 double atuador_getNi(void);
@@ -12,3 +12,5 @@ double atuador_getNf(void);
 
 void atuador_putQ(double lido);
 double atuador_getQ(void);
+
+#endif
