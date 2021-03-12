@@ -153,22 +153,7 @@ void controleTemperatura()
     	// Realiza seu trabalho    	
     	temp = sensor_getT();
     	temperatura_desejada = temperatura_getH();
-    	
-		/*if (((temp-temperatura_desejada)<0.03 && (temp-temperatura_desejada)>0 )  || ((temperatura_desejada - temp)<0.03 && (temperatura_desejada - temp)>0 ))	
-		{ //estabilizar o sistema
-    		//printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
-	    	strcpy( msg_enviada, "ana0.0");
-    		atuador_putNa(msg_socket(msg_enviada));
-    		
-    		strcpy( msg_enviada, "ani0.0");
-	    	atuador_putNi(msg_socket(msg_enviada));
-	    	
-	    	strcpy( msg_enviada, "aq-0.0");
-	    	atuador_putQ(msg_socket(msg_enviada));
-	    	
-	    	strcpy( msg_enviada, "anf0.0");
-	    	atuador_putNf(msg_socket(msg_enviada));
-		}*/
+
     	if (temp<temperatura_desejada){ //aumentar temp
     	    //printf("temperatura menor do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
     		strcpy( msg_enviada, "ana10.0");
@@ -178,8 +163,7 @@ void controleTemperatura()
 	    	atuador_putNi(msg_socket(msg_enviada));  
 	    	
 	    	strcpy( msg_enviada, "anf0.0");
-	    	atuador_putNf(msg_socket(msg_enviada));
-	    	
+	    	atuador_putNf(msg_socket(msg_enviada));	    	
 
 		}
 		else if (temp>temperatura_desejada){ //diminuir temp
@@ -194,8 +178,7 @@ void controleTemperatura()
 	    	atuador_putNf(msg_socket(msg_enviada));
 		}
 
-		
-    	
+		   	
 		// Le a hora atual, coloca em t_fim
 		clock_gettime(CLOCK_MONOTONIC ,&t_fim);	
 			
@@ -273,50 +256,20 @@ void controleNivelAgua()
 	}
 }
 
-void verificaTemperatura()
-{
-	struct timespec t;
-	long int periodo = 90e6; 	// 90ms
-	double temp;
-	
-	
-	// Le a hora atual, coloca em t
-	clock_gettime(CLOCK_MONOTONIC ,&t);
-
-	// Tarefa periodica iniciará em 1 segundo
-	t.tv_sec++;
-
-	while(1) {
-		// Espera ateh inicio do proximo periodo
-		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t, NULL);
-		
-		
-    	// Realiza seu trabalho    	
-    	temp = sensor_getT();
-		if (temp>30){
-    		printf("ALARME DISPARADO\n");
-		}
-		    		
-			
-		
-		
-		// Calcula inicio do proximo periodo
-		t.tv_nsec += periodo;
-		while (t.tv_nsec >= NSEC_PER_SEC) {
-			t.tv_nsec -= NSEC_PER_SEC;
-			t.tv_sec++;
-		}
-	}
-}
-
-
-
 void thread_alarme (void){
 	while(1){
-		//	
+		//
+		sensor_alarmeT(30);
+		aloca_tela();
+		printf("ALARME\n");
+		libera_tela();
+		sleep(1);
+			
 	}
-		
 }
+
+
+
 
 ///Controle
 
@@ -333,22 +286,20 @@ int main( int argc, char *argv[]) {
 	scanf("%f", &nivel_agua);
 	nivel_putH(nivel_agua);
     
-	pthread_t t1, t2, t3;	
+	pthread_t t1, t2,t3;	
 	pthread_t buffer_sensores;
 	pthread_t buffer_tempo_resposta;
-	pthread_t verifica_temperatura;
 	pthread_t controle_temperatura;
 	pthread_t controle_agua;
 	
 
     pthread_create(&t1, NULL, (void *) thread_mostra_status, NULL);
     pthread_create(&t2, NULL, (void *) thread_le_sensor, NULL);
-    pthread_create(&t3, NULL, (void *) thread_alarme, NULL);
     pthread_create(&buffer_sensores, NULL, (void *) bufduplo_esperaBufferCheioSensores, NULL);
     pthread_create(&buffer_tempo_resposta, NULL, (void *) bufduplo_esperaBufferCheio_tempo_resposta, NULL);
-    pthread_create(&verifica_temperatura, NULL, (void *) verificaTemperatura, NULL);
     pthread_create(&controle_temperatura, NULL, (void *) controleTemperatura, NULL);
     pthread_create(&controle_agua, NULL, (void *) controleNivelAgua, NULL);
+    pthread_create(&t3, NULL, (void *) thread_alarme, NULL);
 	
     
 	pthread_join( t1, NULL);
@@ -356,7 +307,6 @@ int main( int argc, char *argv[]) {
 	pthread_join( t3, NULL);
 	pthread_join( buffer_sensores, NULL); 
 	pthread_join( buffer_tempo_resposta, NULL);
-	pthread_join( verifica_temperatura, NULL);
 	pthread_join( controle_temperatura, NULL);
 	pthread_join( controle_agua, NULL);
 	    

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <pthread.h>
 #include "sensor.h"
+#include <stdio.h>
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; 
 static pthread_cond_t alarme = PTHREAD_COND_INITIALIZER; 
