@@ -18,3 +18,8 @@ Para cada sensor foram criadas 3 funções para acessar e alterar os monitores d
 Função put altera o valor do monitor do sensor.
 Função get acessa o valor do monitor do sensor.
 
+
+
+-- T
+
+172.20.128.1

@@ -13,6 +13,7 @@ static int prox_insercao = 0;
 static int gravar = -1;
 static int contador = 0;
 static FILE* arquivo;
+int contador1 = 0;
 
 static pthread_mutex_t exclusao_mutua = PTHREAD_MUTEX_INITIALIZER; 
 static pthread_cond_t buffer_cheio = PTHREAD_COND_INITIALIZER;
@@ -46,12 +47,12 @@ void adiciona_dados_buffer_sensores(float valor_lido){
 	//	Considerando que 5 sensores terão valores armazenados no buffer
 	// então contaremos de 0 a 4 onde o arquivo terá 5 colunas e cada coluna terá valores referentes a um sensor
     if(contador == 2){
-    	contador = 0;
-		fprintf(arquivo, "%f\n",valor_lido);		
+		fprintf(arquivo, "%f\n",valor_lido);
+		contador = 0;		
 	}
-	if(contador>=0 && contador< 2){
-		contador++;
+	else if(contador>=0 && contador< 2){
 		fprintf(arquivo, "%f\t",valor_lido);
+		contador++;
 	}
 	
     fclose(arquivo); //fecha o arquivo
@@ -60,7 +61,6 @@ void adiciona_dados_buffer_sensores(float valor_lido){
 
 double *bufduplo_esperaBufferCheioSensores( void) {
 	double *buffer; 
-	int contador1 = 0;
 	pthread_mutex_lock( &exclusao_mutua); 
 	while( gravar == -1) 
 		pthread_cond_wait( &buffer_cheio, &exclusao_mutua);
@@ -73,15 +73,10 @@ double *bufduplo_esperaBufferCheioSensores( void) {
 	
 	//Adiciona os valores dos sensores no buffer
 	while(contador1<TAMBUF){
+		++contador1;
 		adiciona_dados_buffer_sensores(buffer[contador1]);
-		contador1++;
 	}
-	
 	contador1 = 0;
-	pthread_t buffer_sensores;
-	pthread_create(&buffer_sensores, NULL, (void *) bufduplo_esperaBufferCheioSensores, NULL);
-	pthread_join( buffer_sensores, NULL); 
-
 }
 
 

@@ -43,13 +43,11 @@ void adiciona_dados_buffer_tempo_resposta(float valor_lido){
         exit(1);    
     }
     
-	//	Considerando que 5 sensores terão valores armazenados no buffer
-	// então contaremos de 0 a 4 onde o arquivo terá 5 colunas e cada coluna terá valores referentes a um sensor
+	//Gravando os dados dos tempos de resposta no buffer
 	if(contador==0 ){
 		contador++;
 		fprintf(arquivo, "%f\t",valor_lido);
-	}
-    if(contador == 1){
+	}else if(contador == 1){
     	contador = 0;
 		fprintf(arquivo, "%f\n",valor_lido);		
 	}
