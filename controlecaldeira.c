@@ -154,7 +154,7 @@ void controleTemperatura()
     	temp = sensor_getT();
     	temperatura_desejada = temperatura_getH();
     	
-		if (((temp-temperatura_desejada)<0.03 && (temp-temperatura_desejada)>0 )  || ((temperatura_desejada - temp)<0.03 && (temperatura_desejada - temp)>0 ))	
+		/*if (((temp-temperatura_desejada)<0.03 && (temp-temperatura_desejada)>0 )  || ((temperatura_desejada - temp)<0.03 && (temperatura_desejada - temp)>0 ))	
 		{ //estabilizar o sistema
     		//printf("temperatura igual a escolhida pelo usuario %.2lf\n",temperatura_desejada);
 	    	strcpy( msg_enviada, "ana0.0");
@@ -168,33 +168,27 @@ void controleTemperatura()
 	    	
 	    	strcpy( msg_enviada, "anf0.0");
 	    	atuador_putNf(msg_socket(msg_enviada));
-		}
-    	else if (temp<temperatura_desejada+0.2){ //aumentar temp
-    		//printf("temperatura menor do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
+		}*/
+    	if (temp<temperatura_desejada){ //aumentar temp
+    	    //printf("temperatura menor do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
     		strcpy( msg_enviada, "ana10.0");
     		atuador_putNa(msg_socket(msg_enviada));
     		
     		strcpy( msg_enviada, "ani0.0");
-	    	atuador_putNi(msg_socket(msg_enviada));
-	    	
-	    	strcpy( msg_enviada, "aq-1000000.0");
-	    	atuador_putQ(msg_socket(msg_enviada));
+	    	atuador_putNi(msg_socket(msg_enviada));  
 	    	
 	    	strcpy( msg_enviada, "anf0.0");
 	    	atuador_putNf(msg_socket(msg_enviada));
-    		
-    		
+	    	
+
 		}
-		else if (temp>temperatura_desejada+0.2){ //diminuir temp
+		else if (temp>temperatura_desejada){ //diminuir temp
     		//printf("temperatura maior do q a escolhida pelo usuario %.2lf\n",temperatura_desejada);
-	    	strcpy( msg_enviada, "ana0.0");
+	    	strcpy( msg_enviada, "ana10.0");
     		atuador_putNa(msg_socket(msg_enviada));
     		
     		strcpy( msg_enviada, "ani100.0");
 	    	atuador_putNi(msg_socket(msg_enviada));
-	    	
-	    	strcpy( msg_enviada, "aq-1000000.0");
-	    	atuador_putQ(msg_socket(msg_enviada));
 	    	
 	    	strcpy( msg_enviada, "anf100.0");
 	    	atuador_putNf(msg_socket(msg_enviada));
@@ -245,12 +239,11 @@ void controleNivelAgua()
     	nivel_agua = nivel_getH();
     	if (h<nivel_agua){
     		//printf("nivel de agua menor do q a escolhida pelo usuario");
-    		strcpy( msg_enviada, "ani100.0");
+    		strcpy( msg_enviada, "ani50.0");
 	    	atuador_putNi(msg_socket(msg_enviada));
 	    	strcpy( msg_enviada, "anf0.0");
 	    	atuador_putNf(msg_socket(msg_enviada));
-	    	strcpy( msg_enviada, "ana10.0");
-    		atuador_putNa(msg_socket(msg_enviada));
+
 		}
 		if (h>nivel_agua){
     		//printf("nivel de agua maior do q a escolhida pelo usuario");
@@ -258,6 +251,8 @@ void controleNivelAgua()
 	    	atuador_putNi(msg_socket(msg_enviada));
 	    	strcpy( msg_enviada, "anf100.0");
 	    	atuador_putNf(msg_socket(msg_enviada));
+	    	strcpy( msg_enviada, "ana0.0");
+	    	atuador_putNa(msg_socket(msg_enviada));
 		}
 		
 		// Le a hora atual, coloca em t_fim
