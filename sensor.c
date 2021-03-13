@@ -35,15 +35,7 @@ static double limite_atual = HUGE_VAL;
 	 return aux;
  }
 
-/* Thread fica bloqueada até o valor do sensor chegar em limite */ 
-void sensor_alarmeH( double limite) {
-	pthread_mutex_lock( &lock); 
-	limite_atual = limite; 
-	while( sensor_lidoH < limite_atual) 
-		pthread_cond_wait( &alarme, &lock); 
-	limite_atual = HUGE_VAL; 
-	pthread_mutex_unlock( &lock); 
-}
+
 
 /* SENSOR T */
 /* Chamado pela thread que le o sensor e atualizar o valor do monitor referente ao sensor lido */
@@ -93,15 +85,7 @@ void sensor_alarmeT( double limite) {
 	 return aux;
  }
 
-/* Thread fica bloqueada até o valor do sensor chegar em limite */ 
-void sensor_alarmeTi( double limite) {
-	pthread_mutex_lock( &lock); 
-	limite_atual = limite; 
-	while( sensor_lidoTi < limite_atual) 
-		pthread_cond_wait( &alarme, &lock); 
-	limite_atual = HUGE_VAL; 
-	pthread_mutex_unlock( &lock); 
-}
+
 
 /* SENSOR No */
 /* Chamado pela thread que le o sensor e atualizar o valor do monitor referente ao sensor lido */
@@ -122,16 +106,6 @@ void sensor_alarmeTi( double limite) {
 	 return aux;
  }
 
-/* Thread fica bloqueada até o valor do sensor chegar em limite */ 
-void sensor_alarmeNo( double limite) {
-	pthread_mutex_lock( &lock); 
-	limite_atual = limite; 
-	while( sensor_lidoNo < limite_atual) 
-		pthread_cond_wait( &alarme, &lock); 
-	limite_atual = HUGE_VAL; 
-	pthread_mutex_unlock( &lock); 
-}
-
 /* SENSOR Ta */
 /* Chamado pela thread que le o sensor e atualizar o valor do monitor referente ao sensor lido */
  void sensor_putTa( double lido) {
@@ -151,15 +125,6 @@ void sensor_alarmeNo( double limite) {
 	 return aux;
  }
 
-/* Thread fica bloqueada até o valor do sensor chegar em limite */ 
-void sensor_alarmeTa( double limite) {
-	pthread_mutex_lock( &lock); 
-	limite_atual = limite; 
-	while( sensor_lidoTa < limite_atual) 
-		pthread_cond_wait( &alarme, &lock); 
-	limite_atual = HUGE_VAL; 
-	pthread_mutex_unlock( &lock); 
-}
 
 
 
