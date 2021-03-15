@@ -35,7 +35,7 @@ void bufduplo_insereLeitura_tempo_resposta( double leitura) {
 
 void adiciona_dados_buffer_tempo_resposta(float valor_lido){ 
 	
-    arquivo = fopen("dados_buffer_tempo_resposta.txt", "a");
+    arquivo = fopen("dados_buffer_tempo_resposta.txt", "a+");
     
     //se ocorrer erro na criação ou leitura do arquivo, então o programa deve exibir mensagem de erro e ser encerrado.
     if(arquivo == NULL){

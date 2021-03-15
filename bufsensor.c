@@ -36,7 +36,7 @@ void bufduplo_insereLeitura_sensores( double leitura) {
 
 void adiciona_dados_buffer_sensores(float valor_lido){ 
 	
-    arquivo = fopen("dados_buffer_sensores.txt", "a");
+    arquivo = fopen("dados_buffer_sensores.txt", "a+");
     
     //se ocorrer erro na criação ou leitura do arquivo, então o programa deve exibir mensagem de erro e ser encerrado.
     if(arquivo == NULL){
@@ -77,6 +77,10 @@ double *bufduplo_esperaBufferCheioSensores( void) {
 		adiciona_dados_buffer_sensores(buffer[contador1]);
 	}
 	contador1 = 0;
+	
+	pthread_t buffer_sensor;
+	pthread_create(&buffer_sensor, NULL, (void *) bufduplo_esperaBufferCheioSensores, NULL);
+	pthread_join( buffer_sensor, NULL); 
 }
 
 
