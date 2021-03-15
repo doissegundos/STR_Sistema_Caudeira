@@ -73,8 +73,8 @@ double *bufduplo_esperaBufferCheioSensores( void) {
 	
 	//Adiciona os valores dos sensores no buffer
 	while(contador1<TAMBUF){
-		++contador1;
 		adiciona_dados_buffer_sensores(buffer[contador1]);
+		contador1++;
 	}
 	contador1 = 0;
 	
