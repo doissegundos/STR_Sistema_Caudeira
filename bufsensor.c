@@ -4,7 +4,7 @@
 #include	<stdlib.h>
 #include	<unistd.h>
 
-#define TAMBUF 100 
+#define TAMBUF 120 
 static double buffer_0[TAMBUF]; 
 static double buffer_1[TAMBUF];
 
@@ -13,7 +13,7 @@ static int prox_insercao = 0;
 static int gravar = -1;
 static int contador = 0;
 static FILE* arquivo;
-int contador1 = 0;
+static int contador1 = 0;
 
 static pthread_mutex_t exclusao_mutua = PTHREAD_MUTEX_INITIALIZER; 
 static pthread_cond_t buffer_cheio = PTHREAD_COND_INITIALIZER;

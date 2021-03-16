@@ -16,12 +16,17 @@
 
 float temperatura_desejada = 0;
 float nivel_agua = 0;
-
+int cont1 = 0;
+int cont2 = 0;
+long atraso_fim_temperatura;
+long atraso_fim_nivel_agua;
+long atraso_fim_temperatura_ant;
+long atraso_fim_nivel_agua_ant;
 
 void thread_mostra_status (void){
 	double te, h, ti, ta, no,na,ni,nf,q,temperatura_desejada,nivel_agua;
 	struct timespec t;
-	long int periodo = 40e6; 	// 40ms
+	long int periodo = 70000000; 	// 70ms
 	double temp;
 	
 	// Le a hora atual, coloca em t
@@ -35,23 +40,27 @@ void thread_mostra_status (void){
 		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t, NULL);
 		
 		
-    	te = sensor_getT();
-		bufduplo_insereLeitura_sensores(te);
+    	te = sensor_getT();		
 		
-		h = sensor_getH();
-		bufduplo_insereLeitura_sensores(h);
+		h = sensor_getH();	
 		
 		ti = sensor_getTi();
 		
 		ta = sensor_getTa();
 		
 		no = sensor_getNo();
-		bufduplo_insereLeitura_sensores(no);
 		
 		na = atuador_getNa();
 		nf = atuador_getNf();
 		ni = atuador_getNi();
 		q = atuador_getQ();
+		
+		if(cont2<10000){
+			bufduplo_insereLeitura_sensores(te);
+			bufduplo_insereLeitura_sensores(h);
+			bufduplo_insereLeitura_sensores(no);
+			cont2++;
+		}
 		
 		
 		temperatura_desejada = temperatura_getH();
@@ -82,8 +91,7 @@ void thread_mostra_status (void){
 			t.tv_sec++;
 		}
 	}
-	
-	
+		
 }
 
 
@@ -91,7 +99,7 @@ void thread_le_sensor (void){
 	char msg_enviada[1000];
 	
 	struct timespec t;
-	long int periodo = 30e6; 	// 30ms
+	long int periodo = 40000000; 	// 40ms
 	double temp;
 	
 	// Le a hora atual, coloca em t
@@ -134,13 +142,12 @@ void thread_le_sensor (void){
 void controleTemperatura()
 {
 	struct timespec t, t_fim;;
-	long int periodo = 50e6; 	// 50ms
+	long int periodo = 50000000; 	// 50ms
 	double temp;
 	char msg_enviada[1000];
 	double temperatura_desejada = 0;
 	// Le a hora atual, coloca em t
 	clock_gettime(CLOCK_MONOTONIC ,&t);
-	long atraso_fim;
 
 	// Tarefa periodica iniciará em 1 segundo
 	t.tv_sec++;
@@ -183,8 +190,8 @@ void controleTemperatura()
 		clock_gettime(CLOCK_MONOTONIC ,&t_fim);	
 			
 		// Calcula o tempo de resposta observado em microsegundos
-		atraso_fim = 1000000*(t_fim.tv_sec - t.tv_sec)   +   (t_fim.tv_nsec - t.tv_nsec)/1000;
-		bufduplo_insereLeitura_tempo_resposta(atraso_fim);
+		atraso_fim_temperatura = 1000000*(t_fim.tv_sec - t.tv_sec)   +   (t_fim.tv_nsec - t.tv_nsec)/1000;
+		//bufduplo_insereLeitura_tempo_resposta(atraso_fim_temperatura);
 		
 		// Calcula inicio do proximo periodo
 		t.tv_nsec += periodo;
@@ -198,11 +205,10 @@ void controleTemperatura()
 void controleNivelAgua()
 {
 	struct timespec t, t_fim;;
-	long int periodo = 70e6; 	// 70ms
+	long int periodo = 70000000; 	// 70ms
 	double h;
 	char msg_enviada[1000];
 	double nivel_agua = 0;
-	long atraso_fim;
 	
 	
 	// Le a hora atual, coloca em t
@@ -242,8 +248,8 @@ void controleNivelAgua()
 		clock_gettime(CLOCK_MONOTONIC ,&t_fim);	
 		    	
 		//printf("Passou um periodo !\n");	
-		atraso_fim = 1000000*(t_fim.tv_sec - t.tv_sec)   +   (t_fim.tv_nsec - t.tv_nsec)/1000;
-		bufduplo_insereLeitura_tempo_resposta(atraso_fim);
+		atraso_fim_nivel_agua = 1000000*(t_fim.tv_sec - t.tv_sec)   +   (t_fim.tv_nsec - t.tv_nsec)/1000;
+		//bufduplo_insereLeitura_tempo_resposta(atraso_fim_nivel_agua);
 		
 		
 		
@@ -255,19 +261,65 @@ void controleNivelAgua()
 		}
 	}
 }
+void thread_tempo_resposta(void){
+	struct timespec t, t_fim;;
+	long int periodo = 70000000; 	// 40ms
+	char msg_enviada[1000];	
+	
+	// Le a hora atual, coloca em t
+	clock_gettime(CLOCK_MONOTONIC ,&t);
+
+	// Tarefa periodica iniciará em 1 segundo
+	t.tv_sec++;
+
+	while(1) {
+		if(cont1<10000){
+			if(atraso_fim_temperatura!=atraso_fim_temperatura_ant && atraso_fim_nivel_agua!=atraso_fim_nivel_agua_ant){
+				bufduplo_insereLeitura_tempo_resposta(atraso_fim_temperatura);
+				bufduplo_insereLeitura_tempo_resposta(atraso_fim_nivel_agua);
+				atraso_fim_temperatura_ant = atraso_fim_temperatura;
+				atraso_fim_nivel_agua_ant = atraso_fim_nivel_agua;
+				cont1++;
+			}			
+		}
+		
+				
+		// Calcula inicio do proximo periodo
+		t.tv_nsec += periodo;
+		while (t.tv_nsec >= NSEC_PER_SEC) {
+			t.tv_nsec -= NSEC_PER_SEC;
+			t.tv_sec++;
+		}
+	}
+}
 void thread_alarme (void){
-	while(1){
-		//
+	struct timespec t, t_fim;;
+	long int periodo = 10000000; 	// 10ms
+	char msg_enviada[1000];	
+	
+	// Le a hora atual, coloca em t
+	clock_gettime(CLOCK_MONOTONIC ,&t);
+
+	// Tarefa periodica iniciará em 1 segundo
+	t.tv_sec++;
+
+	while(1) {
+
 		sensor_alarmeT(30);
 		aloca_tela();
 		printf("ALARME\n");
 		libera_tela();
 		sleep(1);
-			
+		
+		// Calcula inicio do proximo periodo
+		t.tv_nsec += periodo;
+		while (t.tv_nsec >= NSEC_PER_SEC) {
+			t.tv_nsec -= NSEC_PER_SEC;
+			t.tv_sec++;
+		}
 	}
+
 }
-
-
 
 
 ///Controle
@@ -290,6 +342,7 @@ int main( int argc, char *argv[]) {
 	pthread_t buffer_tempo_resposta;
 	pthread_t controle_temperatura;
 	pthread_t controle_agua;
+	pthread_t t_tempo_resposta;
 	
 
     pthread_create(&t1, NULL, (void *) thread_mostra_status, NULL);
@@ -299,8 +352,8 @@ int main( int argc, char *argv[]) {
     pthread_create(&controle_temperatura, NULL, (void *) controleTemperatura, NULL);
     pthread_create(&controle_agua, NULL, (void *) controleNivelAgua, NULL);
     pthread_create(&t3, NULL, (void *) thread_alarme, NULL);
+    pthread_create(&t_tempo_resposta, NULL, (void *) thread_tempo_resposta, NULL);
 	
-    
 	pthread_join( t1, NULL);
 	pthread_join( t2, NULL);
 	pthread_join( t3, NULL);
@@ -308,6 +361,7 @@ int main( int argc, char *argv[]) {
 	pthread_join( buffer_tempo_resposta, NULL);
 	pthread_join( controle_temperatura, NULL);
 	pthread_join( controle_agua, NULL);
+	pthread_join( t_tempo_resposta, NULL);
 	    
 }
 

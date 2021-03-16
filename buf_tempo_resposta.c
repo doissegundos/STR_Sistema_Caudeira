@@ -13,6 +13,7 @@ static int prox_insercao = 0;
 static int gravar = -1;
 static int contador = 0;
 static FILE* arquivo;
+static int contador1 = 0;
 
 static pthread_mutex_t exclusao_mutua = PTHREAD_MUTEX_INITIALIZER; 
 static pthread_cond_t buffer_cheio = PTHREAD_COND_INITIALIZER;
@@ -58,7 +59,6 @@ void adiciona_dados_buffer_tempo_resposta(float valor_lido){
 
 double *bufduplo_esperaBufferCheio_tempo_resposta( void) {
 	double *buffer; 
-	int contador1 = 0;
 	pthread_mutex_lock( &exclusao_mutua); 
 	while( gravar == -1) 
 		pthread_cond_wait( &buffer_cheio, &exclusao_mutua);
